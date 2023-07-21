@@ -1,8 +1,17 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import cv2
 import numpy as np
+from diffusers.utils import BaseOutput
 from PIL import Image, ImageOps
+
+
+@dataclass
+class ADOutput(BaseOutput):
+    images: list[Image.Image]
+    init_images: list[Image.Image]
 
 
 def mask_dilate(image: Image.Image, value: int = 4) -> Image.Image:
