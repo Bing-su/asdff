@@ -31,7 +31,7 @@ class AdPipeline(StableDiffusionPipeline):
             scheduler=self.scheduler,
             safety_checker=self.safety_checker,
             feature_extractor=self.feature_extractor,
-            requires_safety_checker=self.requires_safety_checker,
+            requires_safety_checker=self.config.requires_safety_checker,
         )
 
     def __call__(
