@@ -7,7 +7,13 @@ from diffusers import StableDiffusionInpaintPipeline, StableDiffusionPipeline
 from diffusers.utils import logging
 from PIL import Image
 
-from asdff.utils import ADOutput, bbox_padding, composite, mask_dilate
+from asdff.utils import (
+    ADOutput,
+    bbox_padding,
+    composite,
+    mask_dilate,
+    mask_gaussian_blur,
+)
 from asdff.yolo import yolo_detector
 
 logger = logging.get_logger("diffusers")
@@ -42,6 +48,7 @@ class AdPipeline(StableDiffusionPipeline):
         inpaint_only: dict[str, Any] | None = None,
         detectors: DetectorType | Iterable[DetectorType] | None = None,
         mask_dilation: int = 4,
+        mask_blur: int = 4,
         mask_padding: int = 32,
     ):
         if common is None:
@@ -82,6 +89,7 @@ class AdPipeline(StableDiffusionPipeline):
                     if bbox is None:
                         logger.info(f"No object in {ordinal(k + 1)} mask.")
                         continue
+                    mask = mask_gaussian_blur(mask, mask_blur)
                     bbox_padded = bbox_padding(bbox, init_image.size, mask_padding)
 
                     crop_image = init_image.crop(bbox_padded)

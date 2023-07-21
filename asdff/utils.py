@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import cv2
 import numpy as np
 from diffusers.utils import BaseOutput
-from PIL import Image, ImageOps
+from PIL import Image, ImageFilter, ImageOps
 
 
 @dataclass
@@ -22,6 +22,14 @@ def mask_dilate(image: Image.Image, value: int = 4) -> Image.Image:
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (value, value))
     dilated = cv2.dilate(arr, kernel, iterations=1)
     return Image.fromarray(dilated)
+
+
+def mask_gaussian_blur(image: Image.Image, value: int = 4) -> Image.Image:
+    if value <= 0:
+        return image
+
+    blur = ImageFilter.GaussianBlur(value)
+    return image.filter(blur)
 
 
 def bbox_padding(
