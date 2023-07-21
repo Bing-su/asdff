@@ -53,7 +53,7 @@ def mask_to_pil(masks: torch.Tensor, shape: tuple[int, int]) -> list[Image.Image
     return [to_pil_image(masks[i], mode="L").resize(shape) for i in range(n)]
 
 
-def yolo_predictor(
+def yolo_detector(
     image: Image.Image, model_path: str | None = None, confidence: float = 0.3
 ) -> list[Image.Image] | None:
     if not model_path:

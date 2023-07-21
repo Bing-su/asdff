@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from functools import partial
+from functools import cached_property, partial
 from typing import Any, Callable
 
 import cv2
@@ -10,7 +10,7 @@ from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
 from diffusers.utils import logging
 from PIL import Image
 
-from asdff.yolo import yolo_predictor
+from asdff.yolo import yolo_detector
 
 logger = logging.get_logger("diffusers")
 
@@ -20,7 +20,20 @@ def ordinal(n: int) -> str:
     return str(n) + ("th" if 11 <= n % 100 <= 13 else d.get(n % 10, "th"))
 
 
-class AdPipeline(StableDiffusionPipeline, StableDiffusionInpaintPipeline):
+class AdPipeline(StableDiffusionPipeline):
+    @cached_property
+    def inpaine_pipeline(self):
+        return StableDiffusionInpaintPipeline(
+            vae=self.vae,
+            text_encoder=self.text_encoder,
+            tokenizer=self.tokenizer,
+            unet=self.unet,
+            scheduler=self.scheduler,
+            safety_checker=self.safety_checker,
+            feature_extractor=self.feature_extractor,
+            requires_safety_checker=self.requires_safety_checker,
+        )
+
     def __call__(
         self,
         common: dict[str, Any] | None = None,
@@ -41,6 +54,8 @@ class AdPipeline(StableDiffusionPipeline, StableDiffusionInpaintPipeline):
             detector_kwargs = {}
         if detector is None:
             detector = partial(self.default_detector, **detector_kwargs)
+        else:
+            detector = partial(detector, **detector_kwargs)
 
         txt2img_output = StableDiffusionPipeline.__call__(
             self, **common, **txt2img_only, output_type="pil"
@@ -60,15 +75,13 @@ class AdPipeline(StableDiffusionPipeline, StableDiffusionInpaintPipeline):
                 bbox = mask.getbbox()
                 if bbox is None:
                     # Never happens
-                    logger.debug(f"No object detected on {ordinal(i + 1)} image.")
                     continue
                 bbox = self.bbox_padding(bbox, txt2img_image.size, mask_padding)
 
                 crop_image = txt2img_image.crop(bbox)
                 crop_mask = mask.crop(bbox)
 
-                inpaint_output = StableDiffusionInpaintPipeline.__call__(
-                    self,
+                inpaint_output = self.inpaine_pipeline(
                     **common,
                     **inpaint_only,
                     image=crop_image,
@@ -90,7 +103,7 @@ class AdPipeline(StableDiffusionPipeline, StableDiffusionInpaintPipeline):
 
     @property
     def default_detector(self) -> Callable[..., list[Image.Image] | None]:
-        return yolo_predictor
+        return yolo_detector
 
     @staticmethod
     def mask_dilate(image: Image.Image, value: int = 4) -> Image.Image:
