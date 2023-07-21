@@ -1,0 +1,38 @@
+[project]
+name = "asdff"
+description = ""
+authors = [
+    {name = "Bingsu",email = "ks2515@naver.com"},
+]
+dependencies = [
+    "diffusers[torch]",
+    "ultralytics",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "AGPL-3.0"}
+dynamic = ["version"]
+
+[project.urls]
+repository = "https://github.com/Bing-su/asdff"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "black",
+    "ruff",
+    "pre-commit",
+    "ipywidgets",
+]
+
+[tool.pdm.version]
+source = "file"
+path = "asdff/__version__.py"
+
+[tool.ruff]
+select = ["A", "B", "C4", "C90", "E", "EM", "F", "FA", "I001", "ISC", "N", "PIE", "PT", "RET", "RUF", "SIM", "UP", "W"]
+ignore = ["B008", "B905", "E501"]
+unfixable = ["F401"]
