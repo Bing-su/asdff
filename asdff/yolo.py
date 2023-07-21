@@ -68,6 +68,6 @@ def yolo_detector(
     if pred[0].masks is None:
         masks = create_mask_from_bbox(bboxes, image.size)
     else:
-        masks = mask_to_pil(pred[0].masks, image.size)
+        masks = mask_to_pil(pred[0].masks.data, image.size)
 
     return masks
