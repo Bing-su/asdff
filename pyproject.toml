@@ -5,7 +5,8 @@ authors = [
     {name = "Bingsu",email = "ks2515@naver.com"},
 ]
 dependencies = [
-    "diffusers[torch]",
+    "diffusers[torch]>=0.18.2",
+    "transformers>=4.25.1",
     "ultralytics",
 ]
 requires-python = ">=3.8"
