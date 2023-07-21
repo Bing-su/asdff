@@ -8,7 +8,7 @@ import numpy as np
 from diffusers import StableDiffusionInpaintPipeline, StableDiffusionPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
 from diffusers.utils import logging
-from PIL import Image
+from PIL import Image, ImageChops
 
 from asdff.yolo import yolo_detector
 
@@ -71,15 +71,23 @@ class AdPipeline(StableDiffusionPipeline):
                 continue
 
             for _j, mask in enumerate(masks):
+                mask = mask.convert("L")
                 mask = self.mask_dilate(mask, mask_dilation)
                 bbox = mask.getbbox()
                 if bbox is None:
                     # Never happens
                     continue
-                bbox = self.bbox_padding(bbox, txt2img_image.size, mask_padding)
+                bbox_padded = self.bbox_padding(bbox, txt2img_image.size, mask_padding)
 
-                crop_image = txt2img_image.crop(bbox)
-                crop_mask = mask.crop(bbox)
+                img_masked = Image.new("RGBa", txt2img_image.size)
+                img_masked.paste(
+                    txt2img_image.convert("RGBA").convert("RGBa"),
+                    mask=ImageChops.invert(mask),
+                )
+                img_masked = img_masked.convert("RGBA")
+
+                crop_image = txt2img_image.crop(bbox_padded)
+                crop_mask = mask.crop(bbox_padded)
 
                 inpaint_output = self.inpaine_pipeline(
                     **common,
@@ -90,12 +98,16 @@ class AdPipeline(StableDiffusionPipeline):
                     output_type="pil",
                 )
                 inpaint_image: Image.Image = inpaint_output[0][0]
-                resize = (bbox[2] - bbox[0], bbox[3] - bbox[1])
+                resize = (
+                    bbox_padded[2] - bbox_padded[0],
+                    bbox_padded[3] - bbox_padded[1],
+                )
                 resized = inpaint_image.resize(resize)
-                result_image = txt2img_image.copy()
-                result_image.paste(resized, bbox)
 
-                result_images.append(result_image)
+                result_img = Image.new("RGBA", txt2img_image.size)
+                result_img.paste(resized, bbox_padded)
+                result_img.alpha_composite(img_masked)
+                result_images.append(result_img.convert("RGB"))
 
         return StableDiffusionPipelineOutput(
             images=result_images, nsfw_content_detected=None
