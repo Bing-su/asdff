@@ -44,12 +44,29 @@ class AdPipeline(StableDiffusionPipeline):
         mask_dilation: int = 4,
         mask_padding: int = 32,
     ):
+        """
+        Call method for the StableDiffusionPipeline class.
+
+        Parameters
+        ----------
+            common (dict[str, Any] | None, optional): Common parameters for the pipeline. Defaults to None.
+            txt2img_only (dict[str, Any] | None, optional): Parameters for the txt2img step. Defaults to None.
+            inpaint_only (dict[str, Any] | None, optional): Parameters for the inpaint step. Defaults to None.
+            detector (Callable[[Image.Image], list[Image.Image] | None] | None, optional): Object detection function. Defaults to None.
+            detector_kwargs (dict[str, Any] | None, optional): Parameters for the object detection function. Defaults to None.
+            mask_dilation (int, optional): Dilation factor for the object mask. Defaults to 4.
+            mask_padding (int, optional): Padding size for the object mask. Defaults to 32.
+        Returns
+        -------
+            StableDiffusionPipelineOutput: Output of the StableDiffusionPipeline class.
+        """
         if common is None:
             common = {}
         if txt2img_only is None:
             txt2img_only = {}
         if inpaint_only is None:
             inpaint_only = {}
+        inpaint_only.setdefault("strength", 0.4)
         if detector_kwargs is None:
             detector_kwargs = {}
         if detector is None:
