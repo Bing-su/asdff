@@ -32,7 +32,7 @@ pip 설치 필요없음
 import torch
 from diffusers import DiffusionPipeline
 
-pipe = DiffusionPipeline.from_pretrained("stablediffusionapi/counterfeit-v30", torch_dtype=torch.float16, custom_pipeline="Bingsu/adetailer_pipeline")
+pipe = DiffusionPipeline.from_pretrained("stablediffusionapi/counterfeit-v30", torch_dtype=torch.float16, custom_pipeline="Bingsu/adsd_pipeline")
 pipe.safety_checker = None
 pipe.to("cuda")
 
@@ -44,25 +44,25 @@ images = result[0]
 
 ## arguments
 
-- `common`: `Dict[str, Any] | None`
+- `common: Dict[str, Any] | None`
 
 txt2img와 inpaint에서 공통적으로 사용할 인자들
 
-- `txt2img_only`: `Dict[str, Any] | None`
+- `txt2img_only: Dict[str, Any] | None`
 
 txt2img에서만 사용할 인자. common과 겹치는 인자는 덮어씁니다.
 
-[`StableDiffusionPipeline.__call__`](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/text2img#diffusers.StableDiffusionPipeline.__call__)
+[StableDiffusionPipeline.__call__](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/text2img#diffusers.StableDiffusionPipeline.__call__)
 
-- `inpaint_only`: `Dict[str, Any] | None`
+- `inpaint_only: Dict[str, Any] | None`
 
 inpaint에서만 사용할 인자. common과 겹치는 인자는 덮어씁니다.
 
 `strength: 0.4`가 기본값으로 적용됩니다.
 
-[`StableDiffusionInpaintPipeline.__call__`](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint#diffusers.StableDiffusionInpaintPipeline.__call__)
+[StableDiffusionInpaintPipeline.__call__](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint#diffusers.StableDiffusionInpaintPipeline.__call__)
 
-- `detectors`: `DetectorType | Iterable[DetectorType] | None`
+- `detectors: DetectorType | Iterable[DetectorType] | None`
 
 `DetectorType: Callable[[Image.Image], Optional[List[Image.Image]]]`
 
@@ -100,14 +100,14 @@ result = pipe(common=common, detectors=[person_detector, pipe.default_detector])
 result
 ```
 
-- `mask_dilation`: int, default = 4
+- `mask_dilation: int, default = 4`
 
 마스크 감지 후, cv2.dilate 함수를 적용해 마스크 영역을 키우는 데, 이 때 적용할 커널의 크기.
 
-- `mask_blur`: int, default = 4
+- `mask_blur: int, default = 4`
 
 dilation 후 적용할 가우시안 블러의 커널 크기.
 
-- `mask_padding`: int, default = 32
+- `mask_padding: int, default = 32`
 
 dilation 적용 후 이 값만큼 bbox의 가로세로 영역을 더해서 이미지를 자른 뒤, inpaint를 시도하게 됩니다.
