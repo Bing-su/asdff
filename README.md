@@ -62,9 +62,13 @@ inpaint에서만 사용할 인자. common과 겹치는 인자는 덮어씁니다
 
 [`StableDiffusionInpaintPipeline.__call__`](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint#diffusers.StableDiffusionInpaintPipeline.__call__)
 
-- `detector`: `Callable[[Image.Image], list[Image.Image] | None] | None`
+- `detectors`: `DetectorType | Iterable[DetectorType] | None`
 
-pil Image를 입력으로 받아 마스크 이미지의 리스트(마스크), 또는 None을 반환하는 Callable
+`DetectorType: Callable[[Image.Image], Optional[List[Image.Image]]]`
+
+pil Image를 입력으로 받아 마스크 이미지의 리스트(마스크), 또는 None을 반환하는 Callable.
+
+그런 Callable 하나, Callable의 리스트 또는 None
 
 `None`일경우, `default_detector`가 사용됩니다.
 
@@ -79,6 +83,8 @@ pipe.default_detector
 사용 예시
 
 ```py
+from functools import partial
+
 import torch
 from asdff import AdPipeline, yolo_detector
 from huggingface_hub import hf_hub_download
@@ -88,18 +94,19 @@ pipe.safety_checker = None
 pipe.to("cuda")
 
 person_model_path = hf_hub_download("Bingsu/adetailer", "person_yolov8s-seg.pt")
+person_detector = partial(yolo_detector, model_path=person_model_path)
 common = {"prompt": "masterpiece, best quality, 1girl", "num_inference_steps": 28}
-result = pipe(common=common, detector=yolo_detector, detector_kwargs={"model_path": person_model_path})
+result = pipe(common=common, detectors=[person_detector, pipe.default_detector])
 result
 ```
-
-- `detector_kwargs`: `Dict[str, Any] | None`
-
-`detector`의 키워드 인자
 
 - `mask_dilation`: int, default = 4
 
 마스크 감지 후, cv2.dilate 함수를 적용해 마스크 영역을 키우는 데, 이 때 적용할 커널의 크기.
+
+- `mask_blur`: int, default = 4
+
+dilation 후 적용할 가우시안 블러의 커널 크기.
 
 - `mask_padding`: int, default = 32
 
