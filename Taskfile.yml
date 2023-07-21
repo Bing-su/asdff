@@ -10,3 +10,8 @@ tasks:
   huggingface:
     cmds:
       - python upload.py
+
+  publish:
+    cmds:
+      - task: huggingface
+      - pdm publish
