@@ -32,7 +32,11 @@ pip 설치 필요없음
 import torch
 from diffusers import DiffusionPipeline
 
-pipe = DiffusionPipeline.from_pretrained("stablediffusionapi/counterfeit-v30", torch_dtype=torch.float16, custom_pipeline="Bingsu/adsd_pipeline")
+pipe = DiffusionPipeline.from_pretrained(
+    "stablediffusionapi/counterfeit-v30",
+    torch_dtype=torch.float16,
+    custom_pipeline="Bingsu/adsd_pipeline"
+)
 pipe.safety_checker = None
 pipe.to("cuda")
 
@@ -44,17 +48,17 @@ images = result[0]
 
 ## arguments
 
-- `common: Dict[str, Any] | None`
+- `common: Mapping[str, Any] | None`
 
 txt2img와 inpaint에서 공통적으로 사용할 인자들
 
-- `txt2img_only: Dict[str, Any] | None`
+- `txt2img_only: Mapping[str, Any] | None`
 
 txt2img에서만 사용할 인자. common과 겹치는 인자는 덮어씁니다.
 
 [StableDiffusionPipeline.__call__](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/text2img#diffusers.StableDiffusionPipeline.__call__)
 
-- `inpaint_only: Dict[str, Any] | None`
+- `inpaint_only: Mapping[str, Any] | None`
 
 inpaint에서만 사용할 인자. common과 겹치는 인자는 덮어씁니다.
 
