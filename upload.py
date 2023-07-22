@@ -7,33 +7,10 @@ from huggingface_hub import CommitOperationAdd, CommitOperationDelete, HfApi
 
 from asdff import __version__
 
-_readme_text = """---
-license: agpl-3.0
----
-
-# ADetailer Pipeline
-
-```py
-import torch
-from diffusers import DiffusionPipeline
-
-pipe = DiffusionPipeline.from_pretrained(
-    "stablediffusionapi/counterfeit-v30",
-    torch_dtype=torch.float16,
-    custom_pipeline="$repo_id"
-)
-pipe.safety_checker = None
-pipe.to("cuda")
-
-common = {"prompt": "masterpiece, best quality, 1girl", "num_inference_steps": 28}
-result = pipe(common=common)
-
-images = result[0]
-```
-
-github: https://github.com/Bing-su/asdff
-"""
-readme_template = Template(_readme_text)
+with Path(__file__).parent.joinpath("pipelines/readme.txt").open(
+    "r", encoding="utf-8"
+) as text:
+    readme_template = Template(text.read())
 
 api = HfApi()
 pipeline_py = "pipeline.py"

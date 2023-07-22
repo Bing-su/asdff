@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Callable, Iterable, List, Optional
+from typing import Any, Callable, Iterable, List, Mapping, Optional
 
 from diffusers import StableDiffusionInpaintPipeline, StableDiffusionPipeline
 from diffusers.utils import logging
@@ -29,7 +29,7 @@ def ordinal(n: int) -> str:
 
 class AdPipeline(StableDiffusionPipeline):
     @cached_property
-    def inpaine_pipeline(self):
+    def inpaint_pipeline(self):
         return StableDiffusionInpaintPipeline(
             vae=self.vae,
             text_encoder=self.text_encoder,
@@ -43,9 +43,9 @@ class AdPipeline(StableDiffusionPipeline):
 
     def __call__(  # noqa: C901
         self,
-        common: dict[str, Any] | None = None,
-        txt2img_only: dict[str, Any] | None = None,
-        inpaint_only: dict[str, Any] | None = None,
+        common: Mapping[str, Any] | None = None,
+        txt2img_only: Mapping[str, Any] | None = None,
+        inpaint_only: Mapping[str, Any] | None = None,
         detectors: DetectorType | Iterable[DetectorType] | None = None,
         mask_dilation: int = 4,
         mask_blur: int = 4,
@@ -57,7 +57,8 @@ class AdPipeline(StableDiffusionPipeline):
             txt2img_only = {}
         if inpaint_only is None:
             inpaint_only = {}
-        inpaint_only.setdefault("strength", 0.4)
+        if "strength" not in inpaint_only:
+            inpaint_only = {**inpaint_only, "strength": 0.4}
 
         if detectors is None:
             detectors = [self.default_detector]
@@ -95,7 +96,7 @@ class AdPipeline(StableDiffusionPipeline):
                     crop_image = init_image.crop(bbox_padded)
                     crop_mask = mask.crop(bbox_padded)
 
-                    inpaint_output = self.inpaine_pipeline(
+                    inpaint_output = self.inpaint_pipeline(
                         **common,
                         **inpaint_only,
                         image=crop_image,
