@@ -1,5 +1,5 @@
 import torch
-from diffusers import DiffusionPipeline
+from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
 from PIL import Image
 
 from asdff import AdPipeline
@@ -12,14 +12,15 @@ def test_adpipeline():
         "stablediffusionapi/counterfeit-v30", torch_dtype=torch.float16
     )
     pipe.safety_checker = None
+    pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
     pipe.to("cuda")
 
     result = pipe(common=common)
     images = result[0]
     init_images = result[1]
 
-    assert images
-    assert init_images
+    assert len(images) == 1
+    assert len(init_images) == 1
     assert isinstance(images[0], Image.Image)
     assert isinstance(init_images[0], Image.Image)
     assert images[0].mode == "RGB"
@@ -33,14 +34,15 @@ def test_diffusers_custom_pipeline():
         custom_pipeline="Bingsu/adsd_pipeline",
     )
     pipe.safety_checker = None
+    pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
     pipe.to("cuda")
 
     result = pipe(common=common)
     images = result[0]
     init_images = result[1]
 
-    assert images
-    assert init_images
+    assert len(images) == 1
+    assert len(init_images) == 1
     assert isinstance(images[0], Image.Image)
     assert isinstance(init_images[0], Image.Image)
     assert images[0].mode == "RGB"
