@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Iterable, List, Mapping, Optional
 
-from diffusers import DiffusionPipeline
+from diffusers import DiffusionPipeline, StableDiffusionControlNetPipeline
 from diffusers.utils import logging
 from PIL import Image
 
@@ -62,9 +62,8 @@ class AdPipelineBase(ABC):
         elif callable(detectors):
             detectors = [detectors]
 
-        txt2img_output = self.txt2img_class.__call__(
-            self, **common, **txt2img_only, output_type="pil"
-        )
+        txt2img_args = self._get_txt2img_args(common, txt2img_only)
+        txt2img_output = self.txt2img_class.__call__(self, **txt2img_args)
         txt2img_images: list[Image.Image] = txt2img_output[0]
 
         init_images = []
@@ -95,14 +94,10 @@ class AdPipelineBase(ABC):
                     crop_image = init_image.crop(bbox_padded)
                     crop_mask = mask.crop(bbox_padded)
 
-                    inpaint_output = self.inpaint_pipeline(
-                        **common,
-                        **inpaint_only,
-                        image=crop_image,
-                        mask_image=crop_mask,
-                        num_images_per_prompt=1,
-                        output_type="pil",
-                    )
+                    inpaint_args = self._get_inpaint_args(common, inpaint_only)
+                    inpaint_args["image"] = crop_image
+                    inpaint_args["mask_image"] = crop_mask
+                    inpaint_output = self.inpaint_pipeline(**inpaint_args)
                     inpaint_image: Image.Image = inpaint_output[0][0]
                     final_image = composite(
                         init=init_image,
@@ -120,3 +115,21 @@ class AdPipelineBase(ABC):
     @property
     def default_detector(self) -> Callable[..., list[Image.Image] | None]:
         return yolo_detector
+
+    def _get_txt2img_args(
+        self, common: Mapping[str, Any], txt2img_only: Mapping[str, Any]
+    ):
+        return {**common, **txt2img_only, "output_type": "pil"}
+
+    def _get_inpaint_args(
+        self, common: Mapping[str, Any], inpaint_only: Mapping[str, Any]
+    ):
+        common = dict(common)
+        if isinstance(self, StableDiffusionControlNetPipeline) and "image" in common:
+            common["control_image"] = common.pop("image")
+        return {
+            **common,
+            **inpaint_only,
+            "num_images_per_prompt": 1,
+            "output_type": "pil",
+        }

@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from functools import cached_property
 
-from diffusers import StableDiffusionInpaintPipeline, StableDiffusionPipeline
+from diffusers import (
+    StableDiffusionControlNetInpaintPipeline,
+    StableDiffusionControlNetPipeline,
+    StableDiffusionInpaintPipeline,
+    StableDiffusionPipeline,
+)
 
 from asdff.base import AdPipelineBase
 
@@ -24,3 +29,23 @@ class AdPipeline(AdPipelineBase, StableDiffusionPipeline):
     @property
     def txt2img_class(self):
         return StableDiffusionPipeline
+
+
+class AdCnPipeline(AdPipelineBase, StableDiffusionControlNetPipeline):
+    @cached_property
+    def inpaint_pipeline(self):
+        return StableDiffusionControlNetInpaintPipeline(
+            vae=self.vae,
+            text_encoder=self.text_encoder,
+            tokenizer=self.tokenizer,
+            unet=self.unet,
+            controlnet=self.controlnet,
+            scheduler=self.scheduler,
+            safety_checker=self.safety_checker,
+            feature_extractor=self.feature_extractor,
+            requires_safety_checker=self.config.requires_safety_checker,
+        )
+
+    @property
+    def txt2img_class(self):
+        return StableDiffusionControlNetPipeline
