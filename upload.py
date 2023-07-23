@@ -1,3 +1,4 @@
+from collections import defaultdict
 from contextlib import suppress
 from pathlib import Path
 from string import Template
@@ -16,7 +17,7 @@ api = HfApi()
 pipeline_py = "pipeline.py"
 py_files = list(root.joinpath("asdff").rglob("*.py"))
 
-m = {"adsd_pipeline": "stablediffusionapi/counterfeit-v30"}
+m = defaultdict(lambda: "stablediffusionapi/counterfeit-v30")
 
 with TemporaryDirectory() as tmp:
     for pipeline in root.joinpath("pipelines").glob("*.py"):
