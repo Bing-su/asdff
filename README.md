@@ -2,7 +2,7 @@
 
 Adetailer Stable Diffusion diFFusers pipeline
 
-## 예시
+This version supports fixes for input photos
 
 ### from pip install
 
@@ -26,7 +26,6 @@ images = result[0]
 
 ### from custom pipeline
 
-pip 설치 필요없음
 
 ```py
 import torch
@@ -50,19 +49,19 @@ images = result[0]
 
 - `common: Mapping[str, Any] | None`
 
-txt2img와 inpaint에서 공통적으로 사용할 인자들
+  Arguments used in txt2img_only
 
 - `txt2img_only: Mapping[str, Any] | None`
 
-txt2img에서만 사용할 인자. common과 겹치는 인자는 덮어씁니다.
+  Arguments used in StableDiffusionPipeline
 
 [StableDiffusionPipeline.__call__](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/text2img#diffusers.StableDiffusionPipeline.__call__)
 
 - `inpaint_only: Mapping[str, Any] | None`
 
-inpaint에서만 사용할 인자. common과 겹치는 인자는 덮어씁니다.
+ Arguments to be used only by inpaint. Arguments that overlap with common are overwritten.
 
-`strength: 0.4`가 기본값으로 적용됩니다.
+`strength: 0.4`  Used to control the degree of change in the image before and after inpainting.
 
 [StableDiffusionInpaintPipeline.__call__](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint#diffusers.StableDiffusionInpaintPipeline.__call__)
 
@@ -70,11 +69,11 @@ inpaint에서만 사용할 인자. common과 겹치는 인자는 덮어씁니다
 
 `DetectorType: Callable[[Image.Image], Optional[List[Image.Image]]]`
 
-pil Image를 입력으로 받아 마스크 이미지의 리스트(마스크), 또는 None을 반환하는 Callable.
+A Callable that takes a pil Image as input and returns a list (mask) of mask images, or None.
 
-그런 Callable 하나, Callable의 리스트 또는 None
+One such Callable, a list of Callables, or None.
 
-`None`일경우, `default_detector`가 사용됩니다.
+If `None`, the `default_detector` is used.
 
 ```py
 from asdff import AdPipeline
@@ -84,7 +83,7 @@ pipe.default_detector
 >>> <function asdff.yolo.yolo_detector(image: 'Image.Image', model_path: 'str | None' = None, confidence: 'float' = 0.3) -> 'list[Image.Image] | None'>
 ```
 
-사용 예시
+Usage examples
 
 ```py
 from functools import partial
@@ -105,13 +104,13 @@ result
 ```
 
 - `mask_dilation: int, default = 4`
-
-마스크 감지 후, cv2.dilate 함수를 적용해 마스크 영역을 키우는 데, 이 때 적용할 커널의 크기.
+  
+After detecting the mask, the cv2.dilate function is applied to grow the mask area, which is the size of the kernel to be applied.
 
 - `mask_blur: int, default = 4`
 
-dilation 후 적용할 가우시안 블러의 커널 크기.
+The kernel size of the Gaussian blur to apply after dilation.
 
 - `mask_padding: int, default = 32`
-
-dilation 적용 후 이 값만큼 bbox의 가로세로 영역을 더해서 이미지를 자른 뒤, inpaint를 시도하게 됩니다.
+  
+After applying dilation, the image will be cropped by adding this value to the bbox's width and height, and then inpaint will be attempted.
