@@ -44,6 +44,25 @@ result = pipe(common=common)
 
 images = result[0]
 ```
+## Example code for repairing a face
+
+```py
+import torch
+from diffusers import DiffusionPipeline
+
+pipe = DiffusionPipeline.from_pretrained(
+    "stablediffusionapi/counterfeit-v30",
+    torch_dtype=torch.float16,
+    custom_pipeline="Bingsu/adsd_pipeline"
+)
+pipe.safety_checker = None
+pipe.to("cuda")
+
+common = {"prompt": "masterpiece, best quality, 1girl", "num_inference_steps": 28}
+result = pipe(common=common)
+
+images = result[0]
+```
 
 ## arguments
 
@@ -61,7 +80,7 @@ images = result[0]
 
  Arguments to be used only by inpaint. Arguments that overlap with common are overwritten.
 
-`strength: 0.4`  Used to control the degree of change in the image before and after inpainting.
+- `strength: 0.4`  Used to control the degree of change in the image before and after inpainting.
 
 [StableDiffusionInpaintPipeline.__call__](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint#diffusers.StableDiffusionInpaintPipeline.__call__)
 
