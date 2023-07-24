@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import inspect
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Iterable, List, Mapping, Optional
 
-from diffusers import DiffusionPipeline, StableDiffusionControlNetPipeline
 from diffusers.utils import logging
 from PIL import Image
 
@@ -30,7 +30,7 @@ def ordinal(n: int) -> str:
 class AdPipelineBase(ABC):
     @property
     @abstractmethod
-    def inpaint_pipeline(self) -> DiffusionPipeline:
+    def inpaint_pipeline(self) -> Callable:
         raise NotImplementedError
 
     @property
@@ -59,7 +59,7 @@ class AdPipelineBase(ABC):
 
         if detectors is None:
             detectors = [self.default_detector]
-        elif callable(detectors):
+        elif not isinstance(detectors, Iterable):
             detectors = [detectors]
 
         txt2img_args = self._get_txt2img_args(common, txt2img_only)
@@ -125,7 +125,12 @@ class AdPipelineBase(ABC):
         self, common: Mapping[str, Any], inpaint_only: Mapping[str, Any]
     ):
         common = dict(common)
-        if isinstance(self, StableDiffusionControlNetPipeline) and "image" in common:
+        sig = inspect.signature(self.inpaint_pipeline)
+        if (
+            "control_image" in sig.parameters
+            and "control_image" not in common
+            and "image" in common
+        ):
             common["control_image"] = common.pop("image")
         return {
             **common,
