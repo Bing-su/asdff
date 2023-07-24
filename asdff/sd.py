@@ -44,6 +44,7 @@ class AdPipeline(StableDiffusionPipeline):
     def __call__(  # noqa: C901
         self,
         common: Mapping[str, Any] | None = None,
+        images:Union[None,list[Image.Image]]=None,
         txt2img_only: Mapping[str, Any] | None = None,
         inpaint_only: Mapping[str, Any] | None = None,
         detectors: DetectorType | Iterable[DetectorType] | None = None,
@@ -65,8 +66,11 @@ class AdPipeline(StableDiffusionPipeline):
         elif callable(detectors):
             detectors = [detectors]
 
-        txt2img_output = super().__call__(**common, **txt2img_only, output_type="pil")
-        txt2img_images: list[Image.Image] = txt2img_output[0]
+        if images is None:
+            txt2img_output = super().__call__(**common, **txt2img_only, output_type="pil")
+            txt2img_images: list[Image.Image] = txt2img_output[0]
+        else:
+            txt2img_images = images
 
         init_images = []
         final_images = []
