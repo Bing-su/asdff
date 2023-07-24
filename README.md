@@ -44,24 +44,29 @@ result = pipe(common=common)
 
 images = result[0]
 ```
-## Example code for repairing a face
+## example code for repairing faces
 
 ```py
 import torch
-from diffusers import DiffusionPipeline
+import sys
+from PIL import Image
 
-pipe = DiffusionPipeline.from_pretrained(
-    "stablediffusionapi/counterfeit-v30",
-    torch_dtype=torch.float16,
-    custom_pipeline="Bingsu/adsd_pipeline"
-)
+sys.path.insert(0,'/adetailer/asdff')
+from asdff import AdPipeline
+
+pipe = AdPipeline.from_pretrained("CompVis/stable-diffusion-v1-4",torch_dtype=torch.float16)
 pipe.safety_checker = None
 pipe.to("cuda")
 
-common = {"prompt": "masterpiece, best quality, 1girl", "num_inference_steps": 28}
-result = pipe(common=common)
+img_path ='face_human.png'
+res_path = 'save.png')
 
-images = result[0]
+img=Image.open(img_path).convert("RGB")
+result = pipe(common=common,images=[img])
+e_time=time.time()
+
+images.save(res_path)
+
 ```
 
 ## arguments
