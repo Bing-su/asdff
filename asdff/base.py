@@ -147,5 +147,6 @@ class AdPipelineBase(ABC):
         return {
             **common,
             **inpaint_only,
+            "num_images_per_prompt": 1,
             "output_type": "pil",
         }
