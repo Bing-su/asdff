@@ -43,6 +43,7 @@ class AdPipelineBase(ABC):
         common: Mapping[str, Any] | None = None,
         txt2img_only: Mapping[str, Any] | None = None,
         inpaint_only: Mapping[str, Any] | None = None,
+        images: Image.Image | Iterable[Image.Image] | None = None,
         detectors: DetectorType | Iterable[DetectorType] | None = None,
         mask_dilation: int = 4,
         mask_blur: int = 4,
@@ -62,9 +63,20 @@ class AdPipelineBase(ABC):
         elif not isinstance(detectors, Iterable):
             detectors = [detectors]
 
-        txt2img_args = self._get_txt2img_args(common, txt2img_only)
-        txt2img_output = self.txt2img_class.__call__(self, **txt2img_args)
-        txt2img_images: list[Image.Image] = txt2img_output[0]
+        if images and txt2img_only:
+            logger.warning(
+                "Both `images` and `txt2img_only` are specified. if `images` is specified, `txt2img_only` is ignored."
+            )
+
+        if images is None:
+            txt2img_args = self._get_txt2img_args(common, txt2img_only)
+            txt2img_output = self.txt2img_class.__call__(self, **txt2img_args)
+            txt2img_images: list[Image.Image] = txt2img_output[0]
+        else:
+            if not isinstance(images, Iterable):
+                txt2img_images = [images]
+            else:
+                txt2img_images = images
 
         init_images = []
         final_images = []
