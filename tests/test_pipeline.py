@@ -5,31 +5,41 @@ from PIL import Image
 
 from asdff import AdCnPipeline, AdPipeline
 
+common = {
+    "prompt": "masterpiece, best quality, 1girl",
+    "num_inference_steps": 10,
+}
+inpaint = {
+    "prompt": "masterpiece, best quality, 1girl, red_eyes",
+    "num_inference_steps": 10,
+}
+counterfeit = "stablediffusionapi/counterfeit-v30"
 
-def test_adpipeline():
-    pipe = AdPipeline.from_pretrained(
-        "stablediffusionapi/counterfeit-v30", torch_dtype=torch.float16
-    )
+
+class Base:
+    def test_pipeline(self):
+        result = self.pipe(common=common, inpaint_only=inpaint)
+        images = result[0]
+        init_images = result[1]
+
+        assert len(images) == 1
+        assert len(init_images) == 1
+        assert isinstance(images[0], Image.Image)
+        assert isinstance(init_images[0], Image.Image)
+        assert images[0].mode == "RGB"
+        assert init_images[0].mode == "RGB"
+
+
+class TestAdPipeline(Base):
+    pipe = AdPipeline.from_pretrained(counterfeit, torch_dtype=torch.float16)
     pipe.safety_checker = None
     pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
     pipe.to("cuda")
 
-    common = {"prompt": "masterpiece, best quality, 1girl", "num_inference_steps": 20}
-    result = pipe(common=common)
-    images = result[0]
-    init_images = result[1]
 
-    assert len(images) == 1
-    assert len(init_images) == 1
-    assert isinstance(images[0], Image.Image)
-    assert isinstance(init_images[0], Image.Image)
-    assert images[0].mode == "RGB"
-    assert init_images[0].mode == "RGB"
-
-
-def test_diffusers_custom_pipeline():
+class TestDiffusersPipeline(Base):
     pipe = DiffusionPipeline.from_pretrained(
-        "stablediffusionapi/counterfeit-v30",
+        counterfeit,
         torch_dtype=torch.float16,
         custom_pipeline="Bingsu/adsd_pipeline",
     )
@@ -37,25 +47,13 @@ def test_diffusers_custom_pipeline():
     pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
     pipe.to("cuda")
 
-    common = {"prompt": "masterpiece, best quality, 1girl", "num_inference_steps": 20}
-    result = pipe(common=common)
-    images = result[0]
-    init_images = result[1]
 
-    assert len(images) == 1
-    assert len(init_images) == 1
-    assert isinstance(images[0], Image.Image)
-    assert isinstance(init_images[0], Image.Image)
-    assert images[0].mode == "RGB"
-    assert init_images[0].mode == "RGB"
-
-
-def test_cn_pipeline():
+class TestCnPipeline:
     controlnet = ControlNetModel.from_pretrained(
         "lllyasviel/sd-controlnet-openpose", torch_dtype=torch.float16
     )
     pipe = AdCnPipeline.from_pretrained(
-        "stablediffusionapi/counterfeit-v30",
+        counterfeit,
         controlnet=controlnet,
         torch_dtype=torch.float16,
     )
@@ -63,22 +61,20 @@ def test_cn_pipeline():
     pipe.safety_checker = None
     pipe.to("cuda")
 
-    image = load_image(
-        "https://huggingface.co/takuma104/controlnet_dev/resolve/main/gen_compare/control_images/converted/control_human_openpose.png"
-    )
-    common = {
-        "prompt": "masterpiece, best quality, 1girl",
-        "num_inference_steps": 20,
-        "image": image,
-    }
+    def test_cn_pipeline(self):
+        image = load_image(
+            "https://huggingface.co/takuma104/controlnet_dev/resolve/main/gen_compare/control_images/converted/control_human_openpose.png"
+        )
+        common2 = common.copy()
+        common2["image"] = image
 
-    result = pipe(common=common)
-    images = result[0]
-    init_images = result[1]
+        result = self.pipe(common=common2, inpaint_only=inpaint)
+        images = result[0]
+        init_images = result[1]
 
-    assert len(images) == 1
-    assert len(init_images) == 1
-    assert isinstance(images[0], Image.Image)
-    assert isinstance(init_images[0], Image.Image)
-    assert images[0].mode == "RGB"
-    assert init_images[0].mode == "RGB"
+        assert len(images) == 1
+        assert len(init_images) == 1
+        assert isinstance(images[0], Image.Image)
+        assert isinstance(init_images[0], Image.Image)
+        assert images[0].mode == "RGB"
+        assert init_images[0].mode == "RGB"
