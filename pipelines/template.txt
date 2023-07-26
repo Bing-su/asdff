@@ -5,14 +5,14 @@ tags:
 - diffusers
 ---
 
-# ADetailer Pipeline
+# Custom Pipeline for Auto Inpainting
 
 ```py
 import torch
 from diffusers import DiffusionPipeline
 
 pipe = DiffusionPipeline.from_pretrained(
-    "stablediffusionapi/counterfeit-v30",
+    "$hf_id",
     torch_dtype=torch.float16,
     custom_pipeline="$repo_id"
 )
