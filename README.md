@@ -26,7 +26,11 @@ images = result[0]
 
 ### from custom pipeline
 
-pip 설치 필요없음
+ultralytics 설치 필요
+
+```
+pip install ultralytics
+```
 
 ```py
 import torch
@@ -45,6 +49,27 @@ result = pipe(common=common)
 
 images = result[0]
 ```
+
+### 그 외
+
+스케줄러를 변경하고, 입력 이미지를 제공하는 예시
+
+```py
+import torch
+from asdff import AdPipeline
+from diffusers import DPMSolverMultistepScheduler
+from diffusers.utils import load_image
+
+pipe = AdPipeline.from_pretrained("stablediffusionapi/counterfeit-v30", torch_dtype=torch.float16)
+pipe.safety_checker = None
+pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
+pipe = pipe.to("cuda")
+
+common = {"prompt": "masterpiece, best quality, 1girl", "num_inference_steps": 20}
+images = load_image("https://i.imgur.com/8TX2AX6.png")
+result = pipe(common=common, images=[images])
+```
+
 
 ## arguments
 
@@ -65,6 +90,10 @@ inpaint에서만 사용할 인자. common과 겹치는 인자는 덮어씁니다
 `strength: 0.4`가 기본값으로 적용됩니다.
 
 [StableDiffusionInpaintPipeline.__call__](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint#diffusers.StableDiffusionInpaintPipeline.__call__)
+
+- `images: Image | Iterable[Image] | None`
+
+inpaint를 수행할 이미지들. 주어지면 txt2img의 결과를 대체하기 때문에 `txt2img_only`는 무시됩니다.
 
 - `detectors: DetectorType | Iterable[DetectorType] | None`
 
