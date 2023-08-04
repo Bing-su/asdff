@@ -63,20 +63,15 @@ class AdPipelineBase(ABC):
         elif not isinstance(detectors, Iterable):
             detectors = [detectors]
 
-        if images and txt2img_only:
-            logger.warning(
-                "Both `images` and `txt2img_only` are specified. if `images` is specified, `txt2img_only` is ignored."
-            )
-
         if images is None:
-            txt2img_args = self._get_txt2img_args(common, txt2img_only)
-            txt2img_output = self.txt2img_class.__call__(self, **txt2img_args)
-            txt2img_images: list[Image.Image] = txt2img_output[0]
+            txt2img_output = self.process_txt2img(common, txt2img_only)
+            txt2img_images = txt2img_output[0]
         else:
-            if not isinstance(images, Iterable):
-                txt2img_images = [images]
-            else:
-                txt2img_images = images
+            if txt2img_only:
+                msg = "Both `images` and `txt2img_only` are specified. if `images` is specified, `txt2img_only` is ignored."
+                logger.warning(msg)
+
+            txt2img_images = [images] if not isinstance(images, Iterable) else images
 
         init_images = []
         final_images = []
@@ -103,19 +98,20 @@ class AdPipelineBase(ABC):
                     mask = mask_gaussian_blur(mask, mask_blur)
                     bbox_padded = bbox_padding(bbox, init_image.size, mask_padding)
 
-                    crop_image = init_image.crop(bbox_padded)
-                    crop_mask = mask.crop(bbox_padded)
+                    inpaint_output = self.process_inpainting(
+                        common,
+                        inpaint_only,
+                        init_image,
+                        mask,
+                        bbox_padded,
+                    )
+                    inpaint_image = inpaint_output[0][0]
 
-                    inpaint_args = self._get_inpaint_args(common, inpaint_only)
-                    inpaint_args["image"] = crop_image
-                    inpaint_args["mask_image"] = crop_mask
-                    inpaint_output = self.inpaint_pipeline(**inpaint_args)
-                    inpaint_image: Image.Image = inpaint_output[0][0]
                     final_image = composite(
-                        init=init_image,
-                        mask=mask,
-                        gen=inpaint_image,
-                        bbox_padded=bbox_padded,
+                        init_image,
+                        mask,
+                        inpaint_image,
+                        bbox_padded,
                     )
                     init_image = final_image
 
@@ -150,3 +146,24 @@ class AdPipelineBase(ABC):
             "num_images_per_prompt": 1,
             "output_type": "pil",
         }
+
+    def process_txt2img(
+        self, common: Mapping[str, Any], txt2img_only: Mapping[str, Any]
+    ):
+        txt2img_args = self._get_txt2img_args(common, txt2img_only)
+        return self.txt2img_class.__call__(self, **txt2img_args)
+
+    def process_inpainting(
+        self,
+        common: Mapping[str, Any],
+        inpaint_only: Mapping[str, Any],
+        init_image: Image.Image,
+        mask: Image.Image,
+        bbox_padded: tuple[int, int, int, int],
+    ):
+        crop_image = init_image.crop(bbox_padded)
+        crop_mask = mask.crop(bbox_padded)
+        inpaint_args = self._get_inpaint_args(common, inpaint_only)
+        inpaint_args["image"] = crop_image
+        inpaint_args["mask_image"] = crop_mask
+        return self.inpaint_pipeline(**inpaint_args)
