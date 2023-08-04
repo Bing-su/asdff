@@ -48,6 +48,7 @@ class AdPipelineBase(ABC):
         mask_dilation: int = 4,
         mask_blur: int = 4,
         mask_padding: int = 32,
+        asdff_enabled: bool = True,
     ):
         if common is None:
             common = {}
@@ -81,46 +82,51 @@ class AdPipelineBase(ABC):
         init_images = []
         final_images = []
 
-        for i, init_image in enumerate(txt2img_images):
-            init_images.append(init_image.copy())
-            final_image = None
+        if asdff_enabled:
+            for i, init_image in enumerate(txt2img_images):
+                init_images.append(init_image.copy())
+                final_image = None
 
-            for j, detector in enumerate(detectors):
-                masks = detector(init_image)
-                if masks is None:
-                    logger.info(
-                        f"No object detected on {ordinal(i + 1)} image with {ordinal(j + 1)} detector."
-                    )
-                    continue
-
-                for k, mask in enumerate(masks):
-                    mask = mask.convert("L")
-                    mask = mask_dilate(mask, mask_dilation)
-                    bbox = mask.getbbox()
-                    if bbox is None:
-                        logger.info(f"No object in {ordinal(k + 1)} mask.")
+                for j, detector in enumerate(detectors):
+                    masks = detector(init_image)
+                    if masks is None:
+                        logger.info(
+                            f"No object detected on {ordinal(i + 1)} image with {ordinal(j + 1)} detector."
+                        )
                         continue
-                    mask = mask_gaussian_blur(mask, mask_blur)
-                    bbox_padded = bbox_padding(bbox, init_image.size, mask_padding)
 
-                    crop_image = init_image.crop(bbox_padded)
-                    crop_mask = mask.crop(bbox_padded)
+                    for k, mask in enumerate(masks):
+                        mask = mask.convert("L")
+                        mask = mask_dilate(mask, mask_dilation)
+                        bbox = mask.getbbox()
+                        if bbox is None:
+                            logger.info(f"No object in {ordinal(k + 1)} mask.")
+                            continue
+                        mask = mask_gaussian_blur(mask, mask_blur)
+                        bbox_padded = bbox_padding(bbox, init_image.size, mask_padding)
 
-                    inpaint_args = self._get_inpaint_args(common, inpaint_only)
-                    inpaint_args["image"] = crop_image
-                    inpaint_args["mask_image"] = crop_mask
-                    inpaint_output = self.inpaint_pipeline(**inpaint_args)
-                    inpaint_image: Image.Image = inpaint_output[0][0]
-                    final_image = composite(
-                        init=init_image,
-                        mask=mask,
-                        gen=inpaint_image,
-                        bbox_padded=bbox_padded,
-                    )
-                    init_image = final_image
+                        crop_image = init_image.crop(bbox_padded)
+                        crop_mask = mask.crop(bbox_padded)
 
-            if final_image is not None:
-                final_images.append(final_image)
+                        inpaint_args = self._get_inpaint_args(common, inpaint_only)
+                        inpaint_args["image"] = crop_image
+                        inpaint_args["mask_image"] = crop_mask
+                        inpaint_output = self.inpaint_pipeline(**inpaint_args)
+                        inpaint_image: Image.Image = inpaint_output[0][0]
+                        final_image = composite(
+                            init=init_image,
+                            mask=mask,
+                            gen=inpaint_image,
+                            bbox_padded=bbox_padded,
+                        )
+                        init_image = final_image
+
+                if final_image is not None:
+                    final_images.append(final_image)
+        else:
+            init_images = txt2img_images
+            final_images = txt2img_images
+
 
         return ADOutput(images=final_images, init_images=init_images)
 
