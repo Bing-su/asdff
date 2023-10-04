@@ -1,17 +1,15 @@
 [project]
 name = "asdff"
-description = ""
-authors = [
-    {name = "Bingsu",email = "ks2515@naver.com"},
-]
+description = "custom pipeline for auto inpainting"
+authors = [{ name = "Bingsu", email = "ks2515@naver.com" }]
 dependencies = [
-    "diffusers[torch]>=0.19.3",
+    "diffusers[torch]>=0.19.0",
     "transformers>=4.25.1",
     "ultralytics",
 ]
 requires-python = ">=3.8"
 readme = "README.md"
-license = {text = "AGPL-3.0"}
+license = { text = "AGPL-3.0" }
 dynamic = ["version"]
 
 [project.urls]
@@ -22,22 +20,37 @@ requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [tool.pdm.dev-dependencies]
-dev = [
-    "black",
-    "ruff",
-    "pre-commit",
-    "ipykernel",
-    "ipywidgets",
-]
-test = [
-    "pytest>=7.4.0",
-]
+dev = ["black", "ruff", "pre-commit", "ipykernel", "ipywidgets"]
+test = ["pytest>=7.4.0"]
 
 [tool.pdm.version]
 source = "file"
 path = "asdff/__version__.py"
 
 [tool.ruff]
-select = ["A", "B", "C4", "C90", "E", "EM", "F", "FA", "I001", "ISC", "N", "PIE", "PT", "RET", "RUF", "SIM", "UP", "W"]
+select = [
+    "A",
+    "B",
+    "C4",
+    "C90",
+    "E",
+    "EM",
+    "F",
+    "FA",
+    "FURB",
+    "I001",
+    "ISC",
+    "N",
+    "PERF",
+    "PIE",
+    "PT",
+    "PTH",
+    "RET",
+    "RUF",
+    "SIM",
+    "T20",
+    "UP",
+    "W",
+]
 ignore = ["B008", "B905", "E501"]
 unfixable = ["F401"]
