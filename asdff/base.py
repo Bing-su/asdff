@@ -166,4 +166,9 @@ class AdPipelineBase(ABC):
         inpaint_args = self._get_inpaint_args(common, inpaint_only)
         inpaint_args["image"] = crop_image
         inpaint_args["mask_image"] = crop_mask
+
+        if "control_image" in inpaint_args:
+            inpaint_args["control_image"] = inpaint_args["control_image"].resize(
+                crop_image.size
+            )
         return self.inpaint_pipeline(**inpaint_args)
