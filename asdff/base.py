@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import inspect
-from abc import ABC, abstractmethod
 from typing import Any, Callable, Iterable, List, Mapping, Optional
 
 from diffusers.utils import logging
@@ -27,14 +26,12 @@ def ordinal(n: int) -> str:
     return str(n) + ("th" if 11 <= n % 100 <= 13 else d.get(n % 10, "th"))
 
 
-class AdPipelineBase(ABC):
+class AdPipelineBase:
     @property
-    @abstractmethod
     def inpaint_pipeline(self) -> Callable:
         raise NotImplementedError
 
     @property
-    @abstractmethod
     def txt2img_class(self) -> type:
         raise NotImplementedError
 
