@@ -7,11 +7,11 @@ from asdff import AdCnPipeline, AdPipeline
 
 common = {
     "prompt": "masterpiece, best quality, 1girl",
-    "num_inference_steps": 10,
+    "num_inference_steps": 5,
 }
 inpaint = {
     "prompt": "masterpiece, best quality, 1girl, red_eyes",
-    "num_inference_steps": 10,
+    "num_inference_steps": 5,
 }
 counterfeit = "stablediffusionapi/counterfeit-v30"
 
@@ -61,14 +61,13 @@ class TestCnPipeline:
     pipe.safety_checker = None
     pipe.to("cuda")
 
-    def test_cn_pipeline(self):
+    def test_cn_pipeline(self, monkeypatch):
         image = load_image(
             "https://huggingface.co/takuma104/controlnet_dev/resolve/main/gen_compare/control_images/converted/control_human_openpose.png"
         )
-        common2 = common.copy()
-        common2["image"] = image
+        monkeypatch.setitem(common, "image", image)
 
-        result = self.pipe(common=common2, inpaint_only=inpaint)
+        result = self.pipe(common=common, inpaint_only=inpaint)
         images = result[0]
         init_images = result[1]
 

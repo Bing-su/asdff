@@ -10,9 +10,9 @@ from torchvision.transforms.functional import to_pil_image
 
 try:
     from ultralytics import YOLO
-except ModuleNotFoundError:
-    print("Please install ultralytics using `pip install ultralytics`")
-    raise
+except ModuleNotFoundError as e:
+    msg = "Please install ultralytics using `pip install ultralytics`"
+    raise ModuleNotFoundError(msg) from e
 
 
 def create_mask_from_bbox(
