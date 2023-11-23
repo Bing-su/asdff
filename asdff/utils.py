@@ -32,6 +32,14 @@ def mask_gaussian_blur(image: Image.Image, value: int = 4) -> Image.Image:
     return image.filter(blur)
 
 
+def mask_box_blur(image: Image.Image, value: int = 4) -> Image.Image:
+    if value <= 0:
+        return image
+
+    blur = ImageFilter.BoxBlur(value)
+    return image.filter(blur)
+
+
 def bbox_padding(
     bbox: tuple[int, int, int, int], image_size: tuple[int, int], value: int = 32
 ) -> tuple[int, int, int, int]:
