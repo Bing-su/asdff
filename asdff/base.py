@@ -10,6 +10,7 @@ from asdff.utils import (
     ADOutput,
     bbox_padding,
     composite,
+    mask_box_blur,
     mask_dilate,
     mask_gaussian_blur,
 )
@@ -45,6 +46,7 @@ class AdPipelineBase:
         mask_dilation: int = 4,
         mask_blur: int = 4,
         mask_padding: int = 32,
+        mask_blur_type: str = "gaussian",
     ):
         if common is None:
             common = {}
@@ -92,7 +94,12 @@ class AdPipelineBase:
                     if bbox is None:
                         logger.info(f"No object in {ordinal(k + 1)} mask.")
                         continue
-                    mask = mask_gaussian_blur(mask, mask_blur)
+                        
+                    if mask_blur_type == "gaussian" or mask_blur_type == None:
+                        mask = mask_gaussian_blur(mask, mask_blur)
+                    elif mask_blur_type == "box":
+                        mask = mask_box_blur(mask, mask_blur)
+                    
                     bbox_padded = bbox_padding(bbox, init_image.size, mask_padding)
 
                     inpaint_output = self.process_inpainting(
