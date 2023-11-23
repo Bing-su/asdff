@@ -45,6 +45,7 @@ class AdPipelineBase:
         mask_dilation: int = 4,
         mask_blur: int = 4,
         mask_padding: int = 32,
+        asdff_enabled: bool = True,
     ):
         if common is None:
             common = {}
@@ -72,6 +73,10 @@ class AdPipelineBase:
 
         init_images = []
         final_images = []
+
+        if asdff_enabled is False:
+            init_images = txt2img_images
+            return ADOutput(images=txt2img_images, init_images=init_images)
 
         for i, init_image in enumerate(txt2img_images):
             init_images.append(init_image.copy())
